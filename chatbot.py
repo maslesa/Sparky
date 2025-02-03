@@ -12,8 +12,7 @@ import threading
 import pygame
 import tempfile
 
-# Varijable
-apiKey = "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"
+apiKey = "" #your api key
 openai.api_key = apiKey
 name = "Sparky"
 your_name = None
@@ -30,9 +29,8 @@ custom_voice_properties = {
 stop_event = threading.Event()
 
 
-# Funkcija za prikaz kamere uzivo
 def start_camera(panel):
-    cap = cv2.VideoCapture(0)  # 0 je za obicnu kameru
+    cap = cv2.VideoCapture(0)
 
     def update_frame():
         if stop_event.is_set():
@@ -50,7 +48,6 @@ def start_camera(panel):
     update_frame()
 
 
-# Funkcija za prikaz videa
 def start_looping_video(video_path, panel):
     cap = cv2.VideoCapture(video_path)
 
@@ -60,7 +57,7 @@ def start_looping_video(video_path, panel):
             return
         ret, frame = cap.read()
         if not ret:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restartovanje klipa u loop
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             ret, frame = cap.read()
         if ret:
             cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -74,7 +71,7 @@ def start_looping_video(video_path, panel):
     update_video()
 
 
-# TTS funkcija za Engleski
+
 def say_text(text, voice_properties=None):
     text_speech = pyttsx3.init()
 
@@ -86,7 +83,7 @@ def say_text(text, voice_properties=None):
     text_speech.runAndWait()
 
 
-# TTS funkcija za Srpski
+
 def say_text_serbian(text):
     filename = f"../response_{int(time.time())}.mp3"
     tts = gTTS(text=text, lang='sr')
@@ -107,7 +104,7 @@ def say_text_serbian(text):
         print(f"Error deleting file: {e}")
 
 
-# Centriranje GUI-ja
+
 def center_window(root, width, height):
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
@@ -118,7 +115,7 @@ def center_window(root, width, height):
     root.geometry(f'{width}x{height}+{x}+{y}')
 
 
-# Odabir jezika
+
 def language_selector():
     def select_language(language):
         nonlocal selected_language
@@ -150,7 +147,7 @@ def language_selector():
     return selected_language
 
 
-# Unos imena
+
 def get_name():
     def submit_name():
         nonlocal user_name
@@ -186,7 +183,7 @@ def get_name():
     return user_name
 
 
-# Pomocne funkcije
+
 def kazi_i_napisi(text):
     print(text)
     say_text(text, voice_properties=custom_voice_properties)
@@ -196,7 +193,7 @@ def kazi_i_napisi_sr(text):
     say_text_serbian(text)
 
 
-# Funkcija za snimanje zvuka
+
 def record_text(lang):
     while True:
         try:
@@ -228,7 +225,7 @@ def record_text(lang):
         except sr.UnknownValueError:
             print("error")
 
-# Komunikacija sa GPT-om
+
 def ask_ai(text):
     try:
         response_ai = openai.ChatCompletion.create(
@@ -242,35 +239,22 @@ def ask_ai(text):
     except Exception as e:
         return f"Error: {e}"
 
-# Varijabla da proveri da li je prozor pokrenut
+
 window_active = True
 
-# Main logika
+
 def main_logic(your_name, lang):
     global window_active
-    number_of_answers = 0
     if lang == "English":
         say_text(
-            f"Hello {your_name}, my name is Sparky and you have three questions to ask me. How can I help you today?",
+            f"Hello {your_name}, my name is Sparky. How can I help you today?",
             voice_properties=custom_voice_properties)
     else:
         say_text_serbian(
-            f"Zdravo {your_name}, ja sam Sparki, a ti imaš tri pitanja da mi postaviš. Kako ti mogu pomoći danas?")
+            f"Zdravo {your_name}, ja sam Sparki. Kako ti mogu pomoći danas?")
 
     while True:
-        if number_of_answers == 1:
-            if lang == "English":
-                kazi_i_napisi("Ask me another question!")
-            else:
-                kazi_i_napisi_sr("Postavi mi sledeće pitanje.")
-        if number_of_answers == 2:
-            if lang == "English":
-                kazi_i_napisi("Ask me the last question!")
-            else:
-                kazi_i_napisi_sr("Postavi mi poslednje pitanje.")
-
         answer = record_text("en" if lang == "English" else "sr")
-        number_of_answers += 1
 
         if answer == "exit":
             if lang == "English":
@@ -278,9 +262,9 @@ def main_logic(your_name, lang):
             else:
                 kazi_i_napisi_sr(f"Doviđenja {your_name}. Uživaj u danu.")
 
-            stop_event.set()  # Signal da se sve niti zaustave
+            stop_event.set()
             window_active = False
-            video_root.destroy()  # Automatski zatvori prozor
+            video_root.destroy()
             return
 
         response = ask_ai(answer)
@@ -289,18 +273,12 @@ def main_logic(your_name, lang):
         else:
             kazi_i_napisi_sr(response)
 
-        if number_of_answers == 3:
-            if lang == "English":
-                kazi_i_napisi("I really hope I helped you today. See you next time!")
-            else:
-                kazi_i_napisi_sr("Stvarno se nadam da sam ti pomogao. Vidimo se sledeći put.")
+    stop_event.set()
+    window_active = False
+    video_root.destroy()
+    return
 
-            stop_event.set()
-            window_active = False
-            video_root.destroy()
-            return
 
-# Main funkcija
 def main():
     global language, video_root
 
@@ -339,7 +317,7 @@ def main():
     camera_thread = threading.Thread(target=start_camera, args=(camera_label,), daemon=True)
     camera_thread.start()
 
-    looping_video_path = "./video1.mp4"
+    looping_video_path = "../video1.mp4" #install video for robot part of screen and name it "video1.mp4"
 
     if not os.path.exists(looping_video_path):
         kazi_i_napisi(f"Video file not found at {looping_video_path}. Please check the path.")
